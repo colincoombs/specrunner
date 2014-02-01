@@ -1,0 +1,37 @@
+{
+  "name": "specrunner",
+  "version": "0.0.0",
+  "description": "BDD for Arduino-like projects",
+  "main": "./lib/index",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/colincoombs/specrunner.git"
+  },
+  "keywords": [
+    "bdd",
+    "mocha",
+    "arduino"
+  ],
+  "author": "Colin Coombs <github@colincoombs.plus.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/colincoombs/specrunner/issues"
+  },
+  "homepage": "https://github.com/colincoombs/specrunner",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-coffeelint": "0.0.8",
+    "grunt-contrib-coffee": "~0.9.0",
+    "grunt-exec": "~0.4.3",
+    "grunt-simple-mocha": "~0.4.0",
+    "codo": "~2.0.6",
+    "source-map-support": "~0.2.5",
+    "chai": "~1.9.0"
+  },
+  "dependencies": {
+    "commander": "~2.1.0"
+  }
+}

@@ -1,0 +1,48 @@
+@startuml
+
+class Context {
+  addResult(kind, descr)
+}
+
+}
+class Example {
+  addFormatter(formatter)
+  addResult(result)
+  formatSummary(summary)
+  run()
+  summarizeTo(summary)
+}
+
+class Formatter {
+  summary(summary)
+}
+
+class Main {
+  run()
+}
+
+class Result {
+}
+
+class Spec {
+  describe()
+  it()
+  run()
+}
+
+class Summary {
+  passes
+  pends
+  fails
+  add()
+  exitCode()
+}
+
+Main *-- Formatter
+Main *-- Summary
+Main *-- Example
+
+Example *-- Context
+Context *-- Result
+
+@enduml

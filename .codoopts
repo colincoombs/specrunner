@@ -1,0 +1,9 @@
+--name   "specrunner"
+--readme "README.md"
+--title  "BDD for Arduino-like projects"
+--quiet
+--private
+--output ./doc/codo
+./src
+-
+

@@ -20,4 +20,6 @@ integrate it with other node.js packages, but that's another story.
 
 ## Current status
 
-version 0.0.0, pure vapourware!
+* version 0.0.1: 
+all the basic functionality for running specs seems to be present, and it seems to work!
+nothing to do with the hardware aspects yet!

@@ -2,10 +2,11 @@ specrunner = require('..')
 
 class Example
 
-  parent:  null
-  name:    null
-  body:    null
-  results: null
+  parent:     null
+  name:       null
+  body:       null
+  results:    []
+  formatters: []
   
   constructor: (@parent, @name, @body) ->
     @formatters = []
@@ -13,16 +14,13 @@ class Example
     if @parent?
       @parent.add(this)
     
-  addFormatter: (formatter) ->
-    @formatters.push(formatter)
-  
   addResult: (result) ->
     @results.push(result)
     @formatResult(result)
   
   run: () ->
     context = new specrunner.Context(this)
-    # @parent.runAllBeforeEach(context)
+    @parent.runAllBeforeEach(context)
     @formatExampleStart(this)
     @body.call(context) if @body?
     unless @results.length > 0
@@ -30,10 +28,13 @@ class Example
         specrunner.Result.PEND, 'not yet implemented')
       )
     @formatExampleEnd(this)
-    # @parent.runAllAfterEach(context)
+    @parent.runAllAfterEach(context)
   
   summarizeTo: (summary) ->
     summary.add(result) for result in @results
+  
+  addFormatter: (formatter) ->
+    @formatters.push(formatter)
   
   formatExampleStart: (ex) ->
     if @parent?

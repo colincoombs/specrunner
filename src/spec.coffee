@@ -2,6 +2,10 @@ specrunner = require('..')
 
 class Spec
 
+  toplevel: null
+  
+  current: null
+  
   constructor: (@filename) ->
     @toplevel = new specrunner.Group(null, null)
     @current = @toplevel
@@ -15,8 +19,14 @@ class Spec
   
   it: (name, fn) =>
     new specrunner.Example(@current, name, fn)
+
+  beforeEach: (fn) =>
+    @current.addBeforeEach(fn)
+    
+  afterEach: (fn) =>
+    @current.addAfterEach(fn)
     
   run: () ->
-    @e.run()
+    @toplevel.run()
     
 module.exports = Spec

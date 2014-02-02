@@ -19,11 +19,15 @@ class Formatter
   result: (result) ->
     switch result.kind
       when specrunner.Result.PASS
-        console.log "#{@dent}PASS #{result.description}"
+        if result.description?
+          console.log "#{@dent}PASS #{result.description}"
       when specrunner.Result.PEND
-        console.log "#{@dent}PENDING #{result.description}"
+        if result.description?
+          console.log "#{@dent}PENDING #{result.description}"
       when specrunner.Result.FAIL
-        console.log "#{@dent}FAIL #{result.description}"
+        if result.description?
+          console.log "#{@dent}FAIL #{result.description}"
+
   exampleStart: (example) ->
     console.log "#{@dent}#{example.name}"
     @indent()

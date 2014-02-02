@@ -2,7 +2,9 @@ specrunner = require('..')
 
 class Summary
 
-  constructor: () ->
+  permissive: false
+  
+  constructor: (@permissive = false) ->
     @passes = 0
     @pends = 0
     @fails = 0
@@ -18,12 +20,18 @@ class Summary
     
   exitCode: () ->
     if @fails > 0
+      # something failed: always bad
       return 1
     else if @pends > 0
-      return 0
+      # something not implemented: still a kind of failure
+      # unless we're in a good mood
+      return if @permissive then 0 else 1
     else if @passes > 0
+      # something worked, nothing failed, yay!
       return 0
     else
-      return 0
+      # nothing happened: the whole darned specification
+      # is kinda pending, then!
+      return if @permissive then 0 else 1
   
 module.exports = Summary

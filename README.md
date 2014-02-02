@@ -20,4 +20,5 @@ integrate it with other node.js packages, but that's another story.
 
 ## Current status
 
-version 0.0.0, pure vapourware!
+version 0.0.1: 
+  all the basic functionality seems to be present, and it seems to work!

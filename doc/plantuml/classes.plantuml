@@ -1,48 +1,91 @@
 @startuml
 
 class Context {
-  addResult(kind, descr)
+  -_example
+  +expect(act,exp,msg)
+  +pending(msg)
+  -addResult(kind, descr)
 }
 
-}
 class Example {
-  addFormatter(formatter)
-  addResult(result)
-  formatSummary(summary)
-  run()
-  summarizeTo(summary)
+  +name
+  -parent
+  -body
+  +addFormatter(ftr)
+  +run()
+  +addResult(res)
+  +summarizeTo(sum)
+  +formatSummary(sum)
+  -formatExampleStart(ex)
+  -formatExampleEnd(ex)
+  -formatResult(res)
 }
 
 class Formatter {
-  summary(summary)
+  -dent
+  +groupStart(gr)
+  +exampleStart(ex)
+  +result(res)
+  +exampleEnd(ex)
+  +groupEnd(gr)
+  +summary(sum)
+  -indent()
+  -outdent()
+}
+
+class Group {
+  -examples
+  -beforeEach
+  -afterEach
+  -current
+  +add(ex)
+  +addBeforeEach(act)
+  +addAfterEach(act)
+  +run()
+  +runAllBeforeEach(ctx)
+  +addResult(res)
+  +runAllAfterEach(ctx)
+  +summarizeTo(sum)
+  -formatGroupStart(gr)
+  -formatGroupEnd(gr)
 }
 
 class Main {
+  -options
   run()
 }
 
 class Result {
+  +kind
+  +description
 }
 
 class Spec {
-  describe()
-  it()
-  run()
+  +toplevel
+  -current
+  +describe(name,body)
+  +it(name,body)
+  +beforeEach(body)
+  +afterEach(body)
 }
 
 class Summary {
-  passes
-  pends
-  fails
-  add()
-  exitCode()
+  -passes
+  -pends
+  -fails
+  +add(res)
+  +exitCode()
 }
 
+Main *-- Spec
 Main *-- Formatter
 Main *-- Summary
-Main *-- Example
+Spec *-- Group
+Group *-- Example
 
 Example *-- Context
-Context *-- Result
+Example *-- Result
+
+Example <|-- Group
 
 @enduml

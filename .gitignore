@@ -1,3 +1,6 @@
 doc/codo
+doc/images
 lib/
 node_modules/
+/doc/plantuml/classes.png
+/doc/plantuml/run.png

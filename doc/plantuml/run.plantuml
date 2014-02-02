@@ -1,0 +1,75 @@
+@startuml
+
+hide footbox
+
+title The Flow
+
+participant Main
+participant Spec
+participant Toplevel
+participant File
+participant Group
+participant Example
+participant Formatter
+participant Context
+participant Summary
+
+Main -> Spec: construct
+Spec -> Toplevel: construct
+Spec -> File: read
+File -> Spec: describe
+Spec -> Group: construct
+Group -> Toplevel: add
+File -> Spec: beforeEach
+Spec -> Group: addBeforeEach
+File -> Spec: it
+Spec -> Example: construct
+Example -> Group: add
+File -> Spec: afterEach
+Spec -> Group: addAfterEach
+Main -> Formatter: construct
+Main -> Toplevel: addFormatter
+Main -> Toplevel: run
+loop each group
+  Toplevel -> Group: run
+  Group -> Toplevel: formatGroupStart
+  Toplevel -> Formatter: groupStart
+  loop each example
+    Group -> Example: run
+    Example -> Group: formatExampleStart
+    Group -> Toplevel: formatExampleStart
+    Toplevel -> Formatter: exampleStart
+    Example -> Context: construct
+    activate Context
+    Example -> Group: runAllBeforeEach
+    Group -> Toplevel: runAllBeforeEach
+    Group -> Context: beforeCode
+    Example -> Context: exampleCode
+    Context -> Example: addResult
+    Example -> Group: formatResult
+    Group -> Toplevel: formatResult
+    Toplevel -> Formatter: result
+    Example -> Group: runAllAfterEach
+    Group -> Context: afterCode
+    Group -> Toplevel: runAllAfterEach
+    Example -> Group: formatExampleEnd
+    destroy Context
+    Group -> Toplevel: formatExampleEnd
+    Toplevel -> Formatter: exampleEnd
+  end
+  Group -> Toplevel: formatGroupEnd
+  Toplevel -> Formatter: GroupEnd
+end
+Main -> Summary: construct
+Main -> Toplevel: summarizeTo
+loop each group
+  Toplevel -> Group: summarizeTo
+  loop each example
+    Group -> Example: summarizeTo
+    Example-> Summary: add
+  end
+end
+Main -> Toplevel: formatSummary
+Toplevel -> Formatter: summary
+
+@enduml

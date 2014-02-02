@@ -1,6 +1,5 @@
 specrunner = require('..')
-chai = require('chai')
-chai.should()
+require('chai').should()
 
 describe 'Main', ->
   describe 'constructor()', ->

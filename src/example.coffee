@@ -1,3 +1,4 @@
+Q          = require('q')
 specrunner = require('..')
 
 class Example
@@ -18,17 +19,28 @@ class Example
     @results.push(result)
     @formatResult(result)
   
+  # Actually run the example
+  # @return {Promise} for completion
+  #
   run: () ->
+    @deferred = Q.defer()
     context = new specrunner.Context(this)
-    @parent.runAllBeforeEach(context)
-    @formatExampleStart(this)
-    @body.call(context) if @body?
+    @parent.runAllBeforeEach(context).then( =>
+      @formatExampleStart(this)
+      # @TODO = set timeout & error if expired
+      return Q.fcall(@body?.call(context))
+    ).then( ->
     unless @results.length > 0
       @addResult(new specrunner.Result(
         specrunner.Result.PEND, 'not yet implemented')
       )
-    @formatExampleEnd(this)
-    @parent.runAllAfterEach(context)
+    ).then( =>
+      @parent.runAllAfterEach(context)
+    ).then( =>
+      @formatExampleEnd(this)
+      @deferred.resolve()
+    )
+    return @deferred.promise
   
   summarizeTo: (summary) ->
     summary.add(result) for result in @results

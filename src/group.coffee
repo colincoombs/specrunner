@@ -1,3 +1,4 @@
+Q          = require('q')
 specrunner = require('..')
 
 class Group extends specrunner.Example
@@ -27,24 +28,69 @@ class Group extends specrunner.Example
     @afterEach.push(action)
   
   run: () ->
+    @deferred = Q.defer()
     @formatGroupStart(this) if @parent?
-    for example in @examples
+    @remaining = @examples
+    @runTheRemainingExamples()
+    return @deferred.promise
+  
+  runTheRemainingExamples: () ->
+    if @remaining.length == 0
+      @formatGroupEnd(this) if @parent?
+      @deferred.resolve()
+    else
+      example = @remaining.shift()
       @current = example
-      example.run()
-      @current = null
-    @formatGroupEnd(this) if @parent?
+      example.run().then( =>
+        @current = null
+        @runTheRemainingExamples()
+      ).fail( (err) ->
+        # todo whatever
+        throw err
+      )
     
   runAllBeforeEach: (context) ->
+    @deferredActions = Q.defer()
+    @remainingActions = @beforeEach
+    
     if @parent?
-      @parent.runAllBeforeEach(context)
-    for action in @beforeEach
-      action.call(context)
+      @parent.runAllBeforeEach(context).then( =>
+        @runRemainingBeforeEach()
+      )
+    else
+      @runRemainingBeforeEach()
+    return @deferredActions.promise
+
+  runRemainingBeforeEach: () ->
+    if @remainingActions.length == 0
+      @deferredActions.resolve()
+    else
+      action = @remainingActions.shift()
+      # @TODO = set timeout & error if expired
+      Q.fcall(action.call(context)).then( =>
+        @runRemainingBeforeEach()
+      )
   
   runAllAfterEach: (context) ->
-    for action in @afterEach
-      action.call(context)
-    if @parent?
-      @parent.runAllAfterEach(context)
+    @deferredActions = Q.defer()
+    @remainingActions = @afterEach
+    @runRemainingAfterEach()
+    return @deferredActions.promise
+
+  runRemainingAfterEach: () ->
+    if @remainingActions.length == 0
+      if @parent?
+        @parent.runAllAfterEach(context).then( =>
+          @deferredActions.resolve()
+        )
+      else
+        @deferredActions.resolve()
+    else
+      action = @remainingActions.shift()
+      # @TODO = set timeout & error if expired
+      Q.fcall(action.call(context)).then( =>
+        @runRemainingAfterEach()
+      )
   
   summarizeTo: (summary) ->
     example.summarizeTo(summary) for example in @examples

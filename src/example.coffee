@@ -25,23 +25,52 @@ class Example
   run: () ->
     @deferred = Q.defer()
     context = new specrunner.Context(this)
-    @parent.runAllBeforeEach(context).then( =>
-      @formatExampleStart(this)
-      # @TODO = set timeout & error if expired
-      return Q.fcall(@body?.call(context))
-    ).then( ->
-    unless @results.length > 0
-      @addResult(new specrunner.Result(
-        specrunner.Result.PEND, 'not yet implemented')
-      )
+    @formatExampleStart(this)
+    @before().then( =>
+      @action()
     ).then( =>
-      @parent.runAllAfterEach(context)
+      @after()
     ).then( =>
-      @formatExampleEnd(this)
       @deferred.resolve()
+      Q()
+    ).fail( (err) =>
+      @deferred.reject(err)
+    ).finally( =>
+      unless @results.length > 0
+        @addResult(new specrunner.Result(
+          specrunner.Result.PEND, 'not yet implemented')
+        )
+      @formatExampleEnd(this)
     )
     return @deferred.promise
   
+  before: () ->
+    #console.log 'before'
+    if @parent?
+      @parent?.runAllBeforeEach(context)
+    else
+      Q()
+    
+  action: () ->
+    #console.log 'action'
+    if @body?
+      Q.fcall( => @body.call(context) )
+      #.fail(
+      #  @addResult(new specrunner.Result(
+      #    specrunner.Result.FAIL,
+      #    err
+      #  ))
+      #)
+    else
+      Q()
+  
+  after: () ->
+    #console.log 'after'
+    if @parent?
+      @parent?.runAllAfterEach(context)
+    else
+      Q()
+ 
   summarizeTo: (summary) ->
     summary.add(result) for result in @results
   

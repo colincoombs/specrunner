@@ -1,4 +1,5 @@
 module.exports.Context   = require('./context')
+module.exports.Database  = require('./database')
 module.exports.Example   = require('./example')
 module.exports.Group     = require('./group')
 module.exports.Formatter = require('./formatter')

@@ -1,0 +1,50 @@
+Database
+  @open(options)
+    without a location
+      opens an in-memory leveldb
+    with a location
+      the first time
+        uses that location
+      the next times
+        requires that the location is the 
+    returns a promise
+      resolves to instance on success
+      is rejected on error
+    with a prefix
+      uses a distinct subtree of the database
+      sets a prarent-child relationship
+        maybe...
+    with other options
+      dunno
+  @shutdown()
+    closes the leveldb
+  put(key)
+    with default encoding
+      succeeds
+    with json encoding
+      returns real objects
+  get(key,val)
+    returns a promise
+      with unknown key
+        resolves to null
+      with known key
+        resolves to value
+  del(key)
+    with unknown key
+      works
+    with known key
+      deletes the item
+  stream(options)
+    returns selected entries
+      without a start key
+        from the beginning
+      with a start key
+        starting from that key
+      with a limit
+        returns at most that number of entries
+      with an end key
+        stops at that key
+      without an end key
+        goes to the end
+      in reverse mode
+        goes backwards from that key

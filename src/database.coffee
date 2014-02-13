@@ -1,7 +1,9 @@
-level  = require('level')
+#level  = require('level')
 Q      = require('q')
 stream = require('stream')
 specrunner = require('..')
+
+level = specrunner.level
 
 class KeyStripper extends stream.Transform
 
@@ -85,7 +87,7 @@ class Database
     
   setup: ->
     #console.log 'Database#setup()', @prefix
-    @get(['@metadata'])
+    @get(['_metadata'])
     .then (metadata) =>
       #console.log @prefix, 'got metadata', metadata
       @metadata = JSON.parse(metadata)
@@ -101,7 +103,7 @@ class Database
           separator: Database.separator
         #console.log @prefix, 'default metadata', @metadata
         #console.log @prefix, 'stringify', JSON.stringify(@metadata)
-      @put(['@metadata'], JSON.stringify(@metadata))
+      @put(['_metadata'], JSON.stringify(@metadata))
     .then =>
       wireNames = @metadata.wires ? []
       @wires[n] = new specrunner.Wire(this, n) for n in wireNames
@@ -118,7 +120,7 @@ class Database
     return relativeKey[@prefix.length..].join(Database.separator)
 
   timeToStamp: (time) ->
-    console.log @metadata
+    #console.log @metadata
     stamp = time.toString()
     while stamp.length < @metadata.timeStampWidth
       stamp = "0#{stamp}"
@@ -128,9 +130,9 @@ class Database
     parseInt(stamp, 10)
     
   put: (key, value) ->
-    console.log 'Database#put', @fullKey(key), value
-    Database._level.put(@fullKey(key), value)
-    console.log 'put OK'
+    #console.log 'Database#put', @fullKey(key), value
+    Q.ninvoke(Database._level, 'put', @fullKey(key), value)
+    #console.log 'put OK'
   
   get: (key) ->
     #console.log 'Database#get', @fullKey(key)
@@ -141,15 +143,15 @@ class Database
     Database._level.del(@fullKey(key))
     
   stream: (options) ->
-    console.log 'Database#stream'
+    #console.log 'Database#stream'
     q = Q.defer()
     sopts = {}
     sopts[k] = v for k,v of options
     sopts.start = @fullKey(sopts.start ? [])
     sopts.end = @fullKey(sopts.end ? Database.separator)
     Q.ninvoke(Database._level, 'createReadStream', sopts)
-    .then ( (stream) ->
-      console.log 'stream callback'
+    .then ( (stream) =>
+      #console.log 'stream callback'
       stream.pipe(new KeyStripper(this))
       q.resolve(stream)
     )

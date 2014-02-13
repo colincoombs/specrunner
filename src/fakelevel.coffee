@@ -2,7 +2,7 @@ dblite = require('dblite')
 stream = require('stream')
 Q      = require('q')
 
-level = (location = './db.sqlite', opts, cb) ->
+level = (location = './db.sqlite', opts={}, cb) ->
   db = new FakeLevel(location)
   if cb?
     process.nextTick(-> cb(null, db))
@@ -20,17 +20,17 @@ class FakeLevel
     @query(
       "SELECT value FROM stuff WHERE key = '#{key}'"
       (err, rows) =>
-        console.log 'selection', err, rows
+        #console.log 'selection', err, rows
         if err
           throw err
         else if rows.length is 0
-          console.log 'not found'
+          #console.log 'not found'
           @query(
             "INSERT INTO stuff VALUES ('#{key}', '#{value}')"
           )
           cb(null) if cb?
         else
-          console.log 'found'
+          #console.log 'found'
           @query(
             "UPDATE stuff SET value = '#{value}' WHERE key = '#{key}'"
           )
@@ -42,12 +42,23 @@ class FakeLevel
     @query(
       "SELECT value FROM stuff WHERE key = '#{key}'"
       (err, rows) ->
-        #console.log 'ROWS', err, rows
-        result = (if rows.length > 0 then rows[0][0] else null)
-        cb(null, result) if cb?
+        #console.log 'SQLITE:', err, rows
+        if err?
+          result = null
+        else unless rows?
+          result = null
+          err = new Error('entry not found')
+        else unless rows.length > 0
+          result = null
+          err = new Error('entry not found')
+        else
+          result = rows[0][0]
+        #console.log 'CALLBACK', err, result
+        cb(err, result) if cb?
     )
 
   del: (key) ->
+    throw new Error('TBS')
   
   createReadStream: (options = {}, cb) ->
     sql = ["SELECT * FROM stuff"]
@@ -68,6 +79,7 @@ class FakeLevel
       sql.join(' ')
       ['key', 'value']
       (err, rows) ->
+        rows ?= []
         cb(err, new ReadStream(rows))
     )
     
@@ -75,7 +87,7 @@ class FakeLevel
     @db.close()
 
   query: (sql, args...) ->
-    console.log sql
+    #console.log sql
     @db.query(sql, args...)
     
 class ReadStream extends stream.Readable

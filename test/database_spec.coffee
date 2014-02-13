@@ -1,37 +1,61 @@
-stream = require('stream')
-util = require('util')
-Q = require('q')
+stream     = require('stream')
+util       = require('util')
+Q          = require('q')
 specrunner = require('..')
-chai = require('chai')
-chai.should()
+chai       = require('chai')
+
 expect = chai.expect
+chai.should()
 
-{level, StreamPromise} = specrunner
+level         = specrunner.level
+Database      = specrunner.Database
+StreamPromise = specrunner.StreamPromise
 
-describe 'Fake level', ->
+describe 'Database', ->
   
   beforeEach ->
-    @db = level(':memory:')
-    @db.db.on('error', console.error)
+    Database._level = level(':memory:')
+    Database._level.db.on('error', console.error)
     
   afterEach ->
-    @db.close()
+    Database.shutdown()
     
-  describe 'level', ->
-    it 'works', ->
-      expect(@db).not.to.be.null
+  describe 'Database.open', ->
+    it 'works', (done) ->
+      Database.open()
+      .then (db) ->
+        #console.log 'open OK'
+        done()
+      .catch (err) ->
+        #console.log 'open NOK', err
+        done(err)
+      .done()
       
   describe 'put(key, value)', ->
     
-    it 'works', ->
-      (=> @db.put('k', 'v')).should.not.throw(Error)
-  
-    it 'can update as well', (done) ->
-      Q.ninvoke(@db, 'put', 'a', 'A1')
+    beforeEach (done) ->
+      Database.open().then( (db) =>
+        @db = db
+        done()
+      )
+      
+    it 'can insert', (done) ->
+      @db.put('a', 'A')
       .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A2')
+        @db.get('a')
+      ).then( (result) =>
+        Q(
+          expect(result).to.equal('A')
+          done()
+        )
+      ).done()
+  
+    it 'can update', (done) ->
+      @db.put('a', 'A1')
+      .then( =>
+        @db.put('a', 'A2')
       ).then( =>
-        Q.ninvoke(@db, 'get', 'a')
+        @db.get('a')
       ).then( (result) ->
         Q(
           expect(result).to.equal('A2')
@@ -41,10 +65,16 @@ describe 'Fake level', ->
       
   describe 'get(key)', ->
     
+    beforeEach (done) ->
+      Database.open().then( (db) =>
+        @db = db
+        done()
+      )
+      
     it 'works', (done) ->
-      Q.ninvoke(@db, 'put', 'b', 'B')
+      @db.put('b', 'B')
       .then( =>
-        Q.ninvoke(@db, 'get', 'b')
+        @db.get('b')
       ).then( (result) ->
         Q(
           expect(result).to.equal('B')
@@ -52,45 +82,48 @@ describe 'Fake level', ->
         )
       ).done()
   
-    it 'returns null for unknown key', (done) ->
-      Q.ninvoke(@db, 'get', 'crap')
+    it 'errors for unknown key', (done) ->
+      @db.get('crap')
       .then( (result) =>
         done(new Error ('should not succeed'))
       ).fail( (err) =>
         done()
       ).done()
-
-  describe 'createReadStream()', ->
+  
+  describe 'stream()', ->
     
+    beforeEach (done) ->
+      Database.open().then (db) =>
+        @db = db
+      .then =>
+        @db.put('c', 'C')
+      .then =>
+        @db.put('a', 'A')
+      .then =>
+        @db.put('b', 'B')
+      .then =>
+        done()
+      
     it 'can read everything', (done) ->
-      Q.ninvoke(@db, 'put', 'b', 'B')
-      .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A')
-      ).then( =>
-        Q.ninvoke(@db, 'createReadStream', {})
-      ).then( (str) =>
+      @db.stream()
+      .then( (str) =>
         StreamPromise.new str, (item) ->
           @resolution ?= []
           @resolution.push item
-      ).then( (result) ->
+      ).then( (result) =>
         Q(
           expect(result).to.deep.equal([
             {key:'a',value:'A'},
-            {key:'b',value:'B'}
+            {key:'b',value:'B'},
+            {key:'c',value:'C'}
           ])
           done()
         )
       ).done()
   
     it 'can take a start point', (done) ->
-      Q.ninvoke(@db, 'put', 'c', 'C')
-      .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A')
-      ).then( =>
-        Q.ninvoke(@db, 'put', 'b', 'B')
-      ).then( =>
-        Q.ninvoke(@db, 'createReadStream', {start: 'b'})
-      ).then( (str) =>
+      @db.stream({start: 'b'})
+      .then( (str) =>
         StreamPromise.new str, (item) ->
           @resolution ?= []
           @resolution.push item.value
@@ -102,14 +135,8 @@ describe 'Fake level', ->
       ).done()
     
     it 'can take an end point', (done) ->
-      Q.ninvoke(@db, 'put', 'c', 'C')
-      .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A')
-      ).then( =>
-        Q.ninvoke(@db, 'put', 'b', 'B')
-      ).then( =>
-        Q.ninvoke(@db, 'createReadStream', {end: 'b'})
-      ).then( (str) =>
+      @db.stream({end: 'b'})
+      .then( (str) =>
         StreamPromise.new str, (item) ->
           @resolution ?= []
           @resolution.push item.value
@@ -119,16 +146,10 @@ describe 'Fake level', ->
             done()
           )
       ).done()
-
+  
     it 'can stream in reverse', (done) ->
-      Q.ninvoke(@db, 'put', 'c', 'C')
-      .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A')
-      ).then( =>
-        Q.ninvoke(@db, 'put', 'b', 'B')
-      ).then( =>
-        Q.ninvoke(@db, 'createReadStream', {reverse: true})
-      ).then( (str) =>
+      @db.stream({reverse: true})
+      .then( (str) =>
         StreamPromise.new str, (item) ->
           @resolution ?= []
           @resolution.push item.value
@@ -138,16 +159,10 @@ describe 'Fake level', ->
             done()
           )
       ).done()
-
+  
     it 'can limit the number of results', (done) ->
-      Q.ninvoke(@db, 'put', 'c', 'C')
-      .then( =>
-        Q.ninvoke(@db, 'put', 'a', 'A')
-      ).then( =>
-        Q.ninvoke(@db, 'put', 'b', 'B')
-      ).then( =>
-        Q.ninvoke(@db, 'createReadStream', {reverse: true, limit: 2})
-      ).then( (str) =>
+      @db.stream({reverse: true, limit: 2})
+      .then( (str) =>
         StreamPromise.new str, (item) ->
           @resolution ?= []
           @resolution.push item.value

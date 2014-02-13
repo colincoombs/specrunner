@@ -11,8 +11,8 @@ expect = chai.expect
 describe 'Fake level', ->
   
   beforeEach ->
-    @db = level(':memory:')
-    @db.db.on('error', console.error)
+    @db = level(':memory:', trace:true)
+    #@db.db.on('error', console.error)
     
   afterEach ->
     @db.close()
@@ -23,8 +23,16 @@ describe 'Fake level', ->
       
   describe 'put(key, value)', ->
     
-    it 'works', ->
-      (=> @db.put('k', 'v')).should.not.throw(Error)
+    it 'works', (done) ->
+      Q.ninvoke(@db, 'put', 'a', 'A')
+      .then( =>
+        Q.ninvoke(@db, 'get', 'a')
+      ).then( (result) ->
+        Q(
+          expect(result).to.equal('A')
+          done()
+        )
+      ).done()
   
     it 'can update as well', (done) ->
       Q.ninvoke(@db, 'put', 'a', 'A1')

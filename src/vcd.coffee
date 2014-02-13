@@ -1,39 +1,56 @@
 fs     = require('fs')
+Q      = require('q')
 stream = require('stream')
 
+class SplitToLines extends stream.Transform
+
+  constructor: (options = {}) ->
+    super(options)
+    @pending = ''
+
+  _transform: (chunk, _, done) ->
+    console.log "transform #{chunk.length} bytes"
+    [lines..., @pending] = (@pending + chunk).split(/\r?\n/)
+    console.log "that's #{lines.length} lines"
+    for line in lines
+      @push(line)
+    done()
+    
 class Vcd extends stream.Writable
 
-  constructor: (@db, vcdFileName) ->
+  constructor: (@db, @vcdFileName) ->
     super()
-    @pending = ''
     @state = 'start'
     @scopeDepth = 0
     @map = {}
     @time = 0
-    fs.createReadStream(vcdFileName)
-    .pipe(this)
-    .on('error', (e) -> console.error e)
-    .on('finish', -> console.log 'finish')
     
-  _write: (chunk, _, done) ->
-    try
-      #console.log "write #{chunk.length} bytes"
-      [lines..., @pending] = (@pending + chunk).split(/\r?\n/)
-      #console.log "that's #{lines.length} lines"
-      for line in lines
-        #console.log 'line', line
-        switch @state
-          when 'start'
-            @lineInStart(line)
-          when 'scope'
-            @lineInScope(line)
-          when 'dumpvars'
-            @lineInDumpvars(line)
-          else
-            console.error "Vcd state #{@state} - WTF?"
+  run: ->
+    q = Q.defer()
+    fs.createReadStream(@vcdFileName)
+    .pipe(new SplitToLines())
+    .pipe(this)
+    .on('error', (e) -> q.reject(err))
+    .on('finish', -> q.resolve())
+    return q.promise
+    
+  _write: (buf, _, done) ->
+    line = buf.toString()
+    #console.log 'line', line
+    (
+      switch @state
+        when 'start'
+          Q(@lineInStart(line))
+        when 'scope'
+          Q(@lineInScope(line))
+        when 'dumpvars'
+          @lineInDumpvars(line)
+        else
+          console.error "Vcd state #{@state} - WTF?"
+    )
+    .then( ->
       done()
-    catch e
-      console.error(e)
+    )
       
   lineInStart: (line) ->
     words = line.split(' ')
@@ -66,15 +83,13 @@ class Vcd extends stream.Writable
     #console.log 'dv', first, rest
     switch first
       when '#'
-        @time = parseInt(rest)
-        #console.log 'time', @time
+        result = Q(@time = parseInt(rest))
       else
         if rest of @map
-          console.log @time, rest, first
-          @map[rest].put(@time, first)
-          console.log 'done put'
+          #console.log @time, rest, first
+          result = @map[rest].put(@time, first)
         else
-          #console.log 'ignore', rest
-    #console.log 'done line'
-
+          result = Q()
+    return result
+  
 module.exports = Vcd

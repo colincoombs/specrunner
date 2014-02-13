@@ -13,9 +13,6 @@ class KeyStripper extends stream.Transform
   
   _transform: (item, _, done) ->
     item.key = @db.relativeKey(item.key)
-    #item.key.split(Database.separator)
-    #key = key[@db.prefix.length..]
-    #item.key = key.join(Database.separator)
     @push(item)
     done()
     
@@ -27,14 +24,16 @@ class Database
   
   @separator: '~'
   
+  @trace: false
+  
   @open: (location, options={}) ->
-    #console.log 'getlevel...'
+    console.log('getlevel...') if Database.trace
     @getLevel(location, options)
     .then =>
-      #console.log '@toplevel ...'
+      console.log('@toplevel ...') if Database.trace
       @toplevel()
     .then (toplevel) =>
-      #console.log '@findByPrefix...'
+      console.log('@findByPrefix...') if Database.trace
       @findByPrefix(toplevel, options.prefix, options)
     
   @getLevel: (location, options) ->
@@ -48,25 +47,25 @@ class Database
 
   @toplevel: (options) ->
     if @_toplevel?
-      #console.log 'found toplevel'
+      console.log('found toplevel') if Database.trace
       Q(@_toplevel)
     else
-      #console.log 'create toplevel'
+      console.log('create toplevel') if Database.trace
       @_toplevel = new Database(null, options)
       Q.invoke(@_toplevel, 'setup')
 
   @findByPrefix: (parent, prefix = [], options) ->
     if prefix.length is 0
-      #console.log 'found'
+      console.log('found') if Database.trace
       Q(parent)
     else
       [segment, restOfPrefix...] = prefix
       child = parent.child[segment]
       if child?
-        #console.log 'follow down', segment
+        console.log('follow down', segment) if Database.trace
         Q(@findByPrefix(child, restOfPrefix))
       else
-        #console.log 'create segment', segment
+        console.log('create segment', segment) if Database.trace
         child = new Database(parent, options)
         parent.child[segment] = child
         Q.invoke(child, 'setup')
@@ -79,30 +78,28 @@ class Database
   child: {}
     
   constructor: (@parent, options = {}) ->
-    #console.log 'Database#constructor', options
+    console.log('Database#constructor', options) if Database.trace
     @prefix = options.prefix
     @prefix ?= []
     @child = {}
     @wires = {}
     
   setup: ->
-    #console.log 'Database#setup()', @prefix
+    console.log('Database#setup()', @prefix) if Database.trace
     @get(['_metadata'])
     .then (metadata) =>
-      #console.log @prefix, 'got metadata', metadata
+      console.log(@prefix, 'got metadata', metadata) if Database.trace
       @metadata = JSON.parse(metadata)
-      #console.log @prefix, 'own metadata', @metadata
     .catch (err) =>
-      #console.log @prefix, 'NOT got metadata', err
+      console.log(@prefix, 'NOT got metadata', err) if Database.trace
       if @parent?
         @metadata = @parent.metadata
-        #console.log @prefix, 'parent metadata', @metadata
+        console.log(@prefix, 'parent metadata', @metadata) if Database.trace
       else
         @metadata =
           timeStampWidth: 8
           separator: Database.separator
-        #console.log @prefix, 'default metadata', @metadata
-        #console.log @prefix, 'stringify', JSON.stringify(@metadata)
+        console.log(@prefix, 'default metadata', @metadata) if Database.trace
       @put(['_metadata'], JSON.stringify(@metadata))
     .then =>
       wireNames = @metadata.wires ? []
@@ -120,7 +117,6 @@ class Database
     return relativeKey[@prefix.length..].join(Database.separator)
 
   timeToStamp: (time) ->
-    #console.log @metadata
     stamp = time.toString()
     while stamp.length < @metadata.timeStampWidth
       stamp = "0#{stamp}"
@@ -130,20 +126,30 @@ class Database
     parseInt(stamp, 10)
     
   put: (key, value) ->
-    #console.log 'Database#put', @fullKey(key), value
-    Q.ninvoke(Database._level, 'put', @fullKey(key), value)
-    #console.log 'put OK'
+    q = Q.defer()
+    console.log('Database#put', @fullKey(key), value) if Database.trace
+    #Q.ninvoke(Database._level, 'put', @fullKey(key), value)
+    Database._level.put(@fullKey(key), value, (err) ->
+      console.log('callback', err) if Database.trace
+      if err?
+        console.log('reject') if Database.trace
+        q.reject(err)
+      else
+        console.log('resolve') if Database.trace
+        q.resolve()
+    )
+    return q.promise
   
   get: (key) ->
-    #console.log 'Database#get', @fullKey(key)
+    console.log('Database#get', @fullKey(key)) if Database.trace
     Q.ninvoke(Database._level, 'get', @fullKey(key))
     
   del: (key) ->
-    console.log 'Database#del', @fullKey(key)
+    console.log('Database#del', @fullKey(key)) if Database.trace
     Database._level.del(@fullKey(key))
     
   stream: (options) ->
-    #console.log 'Database#stream'
+    console.log('Database#stream') if Database.trace
     q = Q.defer()
     sopts = {}
     sopts[k] = v for k,v of options
@@ -151,7 +157,7 @@ class Database
     sopts.end = @fullKey(sopts.end ? Database.separator)
     Q.ninvoke(Database._level, 'createReadStream', sopts)
     .then ( (stream) =>
-      #console.log 'stream callback'
+      console.log('stream callback') if Database.trace
       stream.pipe(new KeyStripper(this))
       q.resolve(stream)
     )

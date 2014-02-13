@@ -15,7 +15,7 @@ describe 'Database', ->
   
   beforeEach ->
     Database._level = level(':memory:')
-    Database._level.db.on('error', console.error)
+    #Database._level.db.on('error', console.error)
     
   afterEach ->
     Database.shutdown()

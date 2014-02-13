@@ -8,7 +8,7 @@ util       = require('util')
 
 Q.longStackSupport = true
 {level, Database} = specrunner
-Database.trace = true
+#Database.trace = true
 
 
 options
@@ -27,7 +27,7 @@ else
   dbOptions.prefix = []
 
 console.log '1. here we go'
-Q.fcall(level, options.name, trace: true)
+Q.fcall(level, options.name) # , trace: true
 .then( (db) =>
   console.log '2. got level'
   Database._level = db

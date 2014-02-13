@@ -11,7 +11,7 @@ expect = chai.expect
 describe 'Fake level', ->
   
   beforeEach ->
-    @db = level(':memory:', trace:true)
+    @db = level(':memory:') # , trace:true
     #@db.db.on('error', console.error)
     
   afterEach ->

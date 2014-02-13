@@ -9,9 +9,9 @@ class SplitToLines extends stream.Transform
     @pending = ''
 
   _transform: (chunk, _, done) ->
-    console.log "transform #{chunk.length} bytes"
+    #console.log "transform #{chunk.length} bytes"
     [lines..., @pending] = (@pending + chunk).split(/\r?\n/)
-    console.log "that's #{lines.length} lines"
+    #console.log "that's #{lines.length} lines"
     for line in lines
       @push(line)
     done()

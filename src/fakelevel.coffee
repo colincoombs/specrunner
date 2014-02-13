@@ -26,17 +26,17 @@ class FakeLevel
     @query(
       "SELECT value FROM stuff WHERE key = '#{key}'"
       (err, rows) =>
-        console.log 'selection', err, rows
+        #console.log 'selection', err, rows
         if err
           throw err
         else if rows.length is 0
-          console.log 'not found'
+          #console.log 'not found'
           @query(
             "INSERT INTO stuff VALUES ('#{key}', '#{value}')"
           )
           cb(null) if cb?
         else
-          console.log 'found'
+          #console.log 'found'
           @query(
             "UPDATE stuff SET value = '#{value}' WHERE key = '#{key}'"
           )

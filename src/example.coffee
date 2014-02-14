@@ -1,3 +1,4 @@
+Q          = require('q')
 specrunner = require('..')
 
 class Example
@@ -7,6 +8,7 @@ class Example
   body:       null
   results:    []
   formatters: []
+  @trace: false
   
   constructor: (@parent, @name, @body) ->
     @formatters = []
@@ -18,18 +20,58 @@ class Example
     @results.push(result)
     @formatResult(result)
   
-  run: () ->
+  # Actually run the example
+  # @return {Promise} for completion
+  #
+  run: () =>
+    console.log 'Example#run', @name if Example.trace
+    @deferred = Q.defer()
     context = new specrunner.Context(this)
-    @parent.runAllBeforeEach(context)
     @formatExampleStart(this)
-    @body.call(context) if @body?
-    unless @results.length > 0
-      @addResult(new specrunner.Result(
-        specrunner.Result.PEND, 'not yet implemented')
-      )
-    @formatExampleEnd(this)
-    @parent.runAllAfterEach(context)
+    @before(context).then( =>
+      @action(context)
+    ).then( =>
+      @after(context)
+    ).then( =>
+      Q(@deferred.resolve())
+    ).catch( (err) =>
+      Q(@deferred.reject(err))
+    ).finally( =>
+      unless @results.length > 0
+        @addResult(new specrunner.Result(
+          specrunner.Result.PEND, 'not yet implemented')
+        )
+      @formatExampleEnd(this)
+    )
+    return @deferred.promise
   
+  before: (context) ->
+    console.log 'before' if Example.trace
+    if @parent?
+      @parent.runAllBeforeEach(context)
+    else
+      Q()
+    
+  action: (context) ->
+    console.log 'action' if Example.trace
+    if @body?
+      Q(@body.call(context))
+      #.fail(
+      #  @addResult(new specrunner.Result(
+      #    specrunner.Result.FAIL,
+      #    err
+      #  ))
+      #)
+    else
+      Q()
+  
+  after: (context) ->
+    console.log 'after' if Example.trace
+    if @parent?
+      @parent?.runAllAfterEach(context)
+    else
+      Q()
+ 
   summarizeTo: (summary) ->
     summary.add(result) for result in @results
   

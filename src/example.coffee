@@ -8,6 +8,7 @@ class Example
   body:       null
   results:    []
   formatters: []
+  @trace: false
   
   constructor: (@parent, @name, @body) ->
     @formatters = []
@@ -22,19 +23,19 @@ class Example
   # Actually run the example
   # @return {Promise} for completion
   #
-  run: () ->
+  run: () =>
+    console.log 'Example#run', @name if Example.trace
     @deferred = Q.defer()
     context = new specrunner.Context(this)
     @formatExampleStart(this)
-    @before().then( =>
-      @action()
+    @before(context).then( =>
+      @action(context)
     ).then( =>
-      @after()
+      @after(context)
     ).then( =>
-      @deferred.resolve()
-      Q()
-    ).fail( (err) =>
-      @deferred.reject(err)
+      Q(@deferred.resolve())
+    ).catch( (err) =>
+      Q(@deferred.reject(err))
     ).finally( =>
       unless @results.length > 0
         @addResult(new specrunner.Result(
@@ -44,17 +45,17 @@ class Example
     )
     return @deferred.promise
   
-  before: () ->
-    #console.log 'before'
+  before: (context) ->
+    console.log 'before' if Example.trace
     if @parent?
-      @parent?.runAllBeforeEach(context)
+      @parent.runAllBeforeEach(context)
     else
       Q()
     
-  action: () ->
-    #console.log 'action'
+  action: (context) ->
+    console.log 'action' if Example.trace
     if @body?
-      Q.fcall( => @body.call(context) )
+      Q(@body.call(context))
       #.fail(
       #  @addResult(new specrunner.Result(
       #    specrunner.Result.FAIL,
@@ -64,8 +65,8 @@ class Example
     else
       Q()
   
-  after: () ->
-    #console.log 'after'
+  after: (context) ->
+    console.log 'after' if Example.trace
     if @parent?
       @parent?.runAllAfterEach(context)
     else

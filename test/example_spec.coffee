@@ -1,6 +1,9 @@
 specrunner = require('..')
 Q          = require('q')
 require('chai').should()
+
+{Group, Example} = specrunner
+
 # get some spying tools -- sinon?
 
 describe 'Example', ->
@@ -127,7 +130,21 @@ describe 'Example', ->
     #      done(err)
     #    )
 
-  # with before functions
+    describe 'with nested before and after actions', ->
+      it 'runs them before', (done) ->
+        g1 = new Group(null, 'G1')
+        g1.addBeforeEach( -> console.log 'G1B1')
+        g1.addAfterEach( -> console.log 'G1A1')
+        g2 = new Group(g1, 'G2')
+        g2.addBeforeEach( -> console.log 'G2B1')
+        g2.addAfterEach( -> console.log 'G2A1')
+        e = new Example(g2, 'G2E1', -> console.log 'G2E1')
+        e.run()
+        .then =>
+          done()
+        .catch (err) =>
+          done(err)
+        
   # ditto that fail
   # with after functions
   # ditto that fail

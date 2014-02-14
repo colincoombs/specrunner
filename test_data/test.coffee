@@ -32,9 +32,12 @@ module.exports = ->
         @log.push 'four'
       
       @it 'goes once', ->
+        console.log 'three'
         @log.push 'three'
-        @expect true
+        @expect(true, true, 'good')
       
       @it 'goes again', ->
+        console.log 'three-and-a-bit'
         @log.push 'three-and-a-bit'
         @pending 'zzzz'
+

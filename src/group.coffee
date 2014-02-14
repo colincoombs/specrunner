@@ -11,7 +11,10 @@ class Group extends specrunner.Example
   
   current: null
   
+  @trace: false
+  
   constructor: (parent, name) ->
+    console.log 'Group#constructor', @name if Group.trace
     super(parent, name)
     @examples   = []
     @beforeEach = []
@@ -19,79 +22,66 @@ class Group extends specrunner.Example
     @current    = null
   
   add: (child) ->
+    console.log('Group#add', @name, child.name) if Group.trace
     @examples.push(child)
   
   addBeforeEach: (action) ->
+    console.log 'Group#addBeforeEach', @name if Group.trace
     @beforeEach.push(action)
   
   addAfterEach: (action) ->
+    console.log 'Group#addAfterEach', @name if Group.trace
     @afterEach.push(action)
   
   run: () ->
-    @deferred = Q.defer()
-    @formatGroupStart(this) if @parent?
-    @remaining = @examples
-    @runTheRemainingExamples()
-    return @deferred.promise
+    console.log 'Group#run', @name, @examples.length if Group.trace
+    @formatGroupStart(this)
+    @promiseRemainingExamples(e for e in @examples)
+    .then =>
+      @formatGroupEnd(this)
   
-  runTheRemainingExamples: () ->
-    if @remaining.length == 0
-      @formatGroupEnd(this) if @parent?
-      @deferred.resolve()
+  promiseRemainingExamples: (examples) ->
+    console.log(
+      'Group#promiseRemainingExamples',
+      @name,
+      examples.length
+    ) if Group.trace
+    if examples.length > 0
+      [first, theRest...] = examples
+      first.run()
+      .then =>
+        @promiseRemainingExamples(theRest)
     else
-      example = @remaining.shift()
-      @current = example
-      example.run().then( =>
-        @current = null
-        @runTheRemainingExamples()
-      ).fail( (err) ->
-        # todo whatever
-        throw err
-      )
+      Q()
     
   runAllBeforeEach: (context) ->
-    @deferredActions = Q.defer()
-    @remainingActions = @beforeEach
-    
-    if @parent?
-      @parent.runAllBeforeEach(context).then( =>
-        @runRemainingBeforeEach()
-      )
+    console.log 'Group#runAllBeforeEach', @name if Group.trace
+    (if @parent?
+      @parent.runAllBeforeEach(context)
     else
-      @runRemainingBeforeEach()
-    return @deferredActions.promise
+      Q()
+    ).then =>
+      @promiseAllActions(context, (a for a in @beforeEach))
 
-  runRemainingBeforeEach: () ->
-    if @remainingActions.length == 0
-      @deferredActions.resolve()
-    else
-      action = @remainingActions.shift()
-      # @TODO = set timeout & error if expired
-      Q.fcall(action.call(context)).then( =>
-        @runRemainingBeforeEach()
-      )
-  
   runAllAfterEach: (context) ->
-    @deferredActions = Q.defer()
-    @remainingActions = @afterEach
-    @runRemainingAfterEach()
-    return @deferredActions.promise
-
-  runRemainingAfterEach: () ->
-    if @remainingActions.length == 0
+    console.log 'Group#runAllAfterEach', @name if Group.trace
+    @promiseAllActions(context, (a for a in @afterEach))
+    .then =>
       if @parent?
-        @parent.runAllAfterEach(context).then( =>
-          @deferredActions.resolve()
-        )
+        @parent.runAllAfterEach(context)
       else
-        @deferredActions.resolve()
+        Q()
+
+  promiseAllActions: (context, actions) ->
+    console.log 'Group#promiseAllActions', @name, actions.length if Group.trace
+    if actions.length > 0
+      [first, theRest...] = actions
+      Q(first.call(context))
+      .then =>
+        @promiseAllActions(context, theRest)
     else
-      action = @remainingActions.shift()
-      # @TODO = set timeout & error if expired
-      Q.fcall(action.call(context)).then( =>
-        @runRemainingAfterEach()
-      )
-  
+      Q()
+
   summarizeTo: (summary) ->
     example.summarizeTo(summary) for example in @examples
     

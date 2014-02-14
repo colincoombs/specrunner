@@ -24,7 +24,7 @@ module.exports = (grunt) ->
       all:
         options:
           interface: 'bdd'
-          reporter: 'spec'
+          reporter: 'dot' # 'spec'
         src:
           'test/*.coffee'
       #cov:

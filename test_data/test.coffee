@@ -21,7 +21,7 @@ module.exports = ->
     
     @afterEach ->
       @log.push 'five'
-      console.log 'LOGGED', @log
+      #console.log 'LOGGED', @log
       
     @describe 'nested group', ->
       

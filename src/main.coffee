@@ -12,7 +12,7 @@ class Main
   run: (args) ->
     #console.log 'Main#run'
     spec = new specrunner.Spec('../test_data/test.coffee')
-    spec.toplevel.addFormatter(new specrunner.Formatter())
+    #spec.toplevel.addFormatter(new specrunner.Formatter())
     spec.toplevel.run()
     summary = new specrunner.Summary()
     spec.toplevel.summarizeTo(summary)

@@ -8,4 +8,13 @@ class Result
   
   constructor: (@kind, @description) ->
     
+  @pass: (description) ->
+    new Result(@PASS, description)
+    
+  @fail: (description) ->
+    new Result(@FAIL, description)
+    
+  @pend: (description) ->
+    new Result(@PEND, description)
+    
 module.exports = Result

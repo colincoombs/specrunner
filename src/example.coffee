@@ -1,6 +1,8 @@
 Q          = require('q')
 specrunner = require('..')
 
+{Result} = specrunner
+
 class Example
 
   parent:     null
@@ -33,15 +35,10 @@ class Example
     ).then( =>
       @after(context)
     ).catch( (err) =>
-      @addResult(new specrunner.Result(
-        specrunner.Result.FAIL,
-        err
-      ))
+      @addResult(Result.fail(err))
     ).finally( =>
       unless @results.length > 0
-        @addResult(new specrunner.Result(
-          specrunner.Result.PEND, 'not yet implemented')
-        )
+        @addResult(Result.pend('not yet implemented'))
       @formatExampleEnd(this)
     )
     

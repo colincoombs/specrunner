@@ -1,5 +1,7 @@
 specrunner = require('..')
 
+{Result} = specrunner
+
 class Context
 
   @trace: false
@@ -7,17 +9,13 @@ class Context
   constructor: (@_example) ->
     console.log 'Context#constructor' if Context.trace
     
-  addResult: (kind, description) =>
-    console.log 'Context#addResult', kind, description if Context.trace
-    @_example.addResult(new specrunner.Result(kind, description))
-  
   pending: (description) ->
-    @addResult(specrunner.Result.PEND, description)
+    @_example.addResult(Result.pend(description))
 
   expect: (actual, expected=true, errorDescription) ->
     if actual is expected
-      @addResult(specrunner.Result.PASS)
+      @_example.addResult(Result.pass())
     else
-      @addResult(specrunner.Result.FAIL, errorDescription)
+      @_example.addResult(Result.fail(errorDescription))
       
 module.exports = Context

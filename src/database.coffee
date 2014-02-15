@@ -3,8 +3,6 @@ Q      = require('q')
 stream = require('stream')
 specrunner = require('..')
 
-level = specrunner.level
-
 class KeyStripper extends stream.Transform
 
   constructor: (@db, options = {}) ->
@@ -27,25 +25,29 @@ class Database
   @trace: false
   
   @open: (location, options={}) ->
-    console.log('getlevel...') if Database.trace
+    console.log('Database.open', location, options) if Database.trace
     @getLevel(location, options)
     .then =>
-      console.log('@toplevel ...') if Database.trace
       @toplevel()
     .then (toplevel) =>
       console.log('@findByPrefix...') if Database.trace
       @findByPrefix(toplevel, options.prefix, options)
     
   @getLevel: (location, options) ->
+    console.log 'Database.getLevel', location, options if Database.trace
     if @_level?
+      console.log 'found level' if Database.trace
       Q(@_level)
     else
-      Q.fcall(level, location, options)
+      console.log 'create level', specrunner.level if Database.trace
+      Q.fcall(specrunner.level, location, options)
       .then (db) =>
+        console.log 'created level' if Database.trace
         @_level = db
         db.on('error', (e) -> console.error 'AARGH', e)
 
   @toplevel: (options) ->
+    console.log('Database.toplevel', options) if Database.trace
     if @_toplevel?
       console.log('found toplevel') if Database.trace
       Q(@_toplevel)

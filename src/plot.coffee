@@ -3,13 +3,18 @@ Q          = require('q')
 
 class Plot
 
+  @trace: false
   # options:
   # - height
   # - timeFactor
   # - tmax
   # - yStride
   constructor: (@db, @outputStream, @options = {}) ->
-    #console.log 'Plot#constructor', @db, @outputStream, @options
+    console.log(
+      'Plot#constructor',
+      @outputStream,
+      @options
+    ) if Plot.trace
     # set defaults
     @options.yStride    ?= 10
     @options.height     ?= @options.yStride / 2
@@ -27,6 +32,7 @@ class Plot
     @offsets._top = offset
 
   go: ->
+    console.log 'Plot#go' if Plot.trace
     @_writeGnuplotCommands()
     return @_promiseToPipeAll(@wireNames, end:false)
     .then( =>
@@ -77,7 +83,7 @@ class Plot
     return "plot #{plots.join(',\\\n     ')}"
   
   _promiseToPipeAll: (wireNames, streamOptions) =>
-    #console.log 'Plot#promiseToPipeAll', wireNames, streamOptions
+    console.log 'Plot#promiseToPipeAll', wireNames, streamOptions if Plot.trace
 
     if wireNames.length > 0
 

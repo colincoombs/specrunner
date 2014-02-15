@@ -1,16 +1,20 @@
 dblite = require('dblite')
+events = require('events')
 stream = require('stream')
 Q      = require('q')
 
 level = (location = './db.sqlite', opts={}, cb) ->
+  console.log
   if opts.trace?
     FakeLevel.trace = opts.trace
+  console.log 'level', location, opts, cb if FakeLevel.trace
   db = new FakeLevel(location)
   if cb?
+    console.log 'call it back'
     process.nextTick(-> cb(null, db))
   return db
   
-class FakeLevel
+class FakeLevel extends events.EventEmitter
 
   @trace: false
 

@@ -7,14 +7,13 @@ stream     = require('stream')
 util       = require('util')
 
 Q.longStackSupport = true
-{level, Database} = specrunner
-#Database.trace = true
-
+{level, Database, Vcd} = specrunner
 
 options
   .option('-n, --name <n>', 'name of the database file storage')
   .option('-f, --from <n>', 'name of vcd file to import')
   .option('-x, --prefix <x>', 'prefix for all keys in database')
+  .option('-d, --debug', 'enable loads ot tracingg and stuff')
   .version('0.0.1')
   .parse(process.argv)
 
@@ -26,13 +25,14 @@ if options.prefix?
 else
   dbOptions.prefix = []
 
+if options.debug
+  dbOptions.trace = true
+  Database.trace = true
+
+
 console.log '1. here we go'
-Q.fcall(level, options.name) # , trace: true
+Database.open(options.name, dbOptions)
 .then( (db) =>
-  console.log '2. got level'
-  Database._level = db
-  Database.open(options.name, dbOptions)
-).then( (db) =>
   console.log '3. got db'
   @db = db
   @db.get(['_metadata'])

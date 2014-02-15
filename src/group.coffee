@@ -1,5 +1,6 @@
 Q          = require('q')
 specrunner = require('..')
+util       = require('util')
 
 class Group extends specrunner.Example
 
@@ -14,7 +15,7 @@ class Group extends specrunner.Example
   @trace: false
   
   constructor: (parent, name) ->
-    console.log 'Group#constructor', @name if Group.trace
+    console.log 'Group#constructor', name if Group.trace
     super(parent, name)
     @examples   = []
     @beforeEach = []
@@ -36,7 +37,7 @@ class Group extends specrunner.Example
   run: () ->
     console.log 'Group#run', @name, @examples.length if Group.trace
     @formatGroupStart(this)
-    @promiseRemainingExamples(e for e in @examples)
+    @promiseRemainingExamples(@examples)
     .then =>
       @formatGroupEnd(this)
   
@@ -56,32 +57,34 @@ class Group extends specrunner.Example
     
   runAllBeforeEach: (context) ->
     console.log 'Group#runAllBeforeEach', @name if Group.trace
-    (if @parent?
-      @parent.runAllBeforeEach(context)
-    else
-      Q()
-    ).then =>
-      @promiseAllActions(context, (a for a in @beforeEach))
-
+    Q(@parent?.runAllBeforeEach(context))
+    .then( =>
+      console.log "Group#parent resolved", @name if Group.trace
+      @promiseAllActions(context, @beforeEach)
+    ).catch( (err) =>
+      console.log 'AARGH', err if Group.trace
+      throw err
+    )
+    
   runAllAfterEach: (context) ->
     console.log 'Group#runAllAfterEach', @name if Group.trace
-    @promiseAllActions(context, (a for a in @afterEach))
-    .then =>
-      if @parent?
-        @parent.runAllAfterEach(context)
-      else
-        Q()
-
+    @promiseAllActions(context, @afterEach)
+    .then( =>
+      Q(@parent?.runAllAfterEach(context))
+    )
+    
   promiseAllActions: (context, actions) ->
     console.log 'Group#promiseAllActions', @name, actions.length if Group.trace
-    if actions.length > 0
-      [first, theRest...] = actions
-      Q(first.call(context))
-      .then =>
-        @promiseAllActions(context, theRest)
-    else
-      Q()
-
+    Q(
+      if actions.length > 0
+        console.log 'Group#action call', @name if Group.trace
+        [first, theRest...] = actions
+        Q(first.call(context))
+        .then =>
+          console.log "Group#action resolved", @name if Group.trace
+          @promiseAllActions(context, theRest)
+    )
+    
   summarizeTo: (summary) ->
     example.summarizeTo(summary) for example in @examples
     

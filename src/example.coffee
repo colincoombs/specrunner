@@ -25,17 +25,18 @@ class Example
   #
   run: () =>
     console.log 'Example#run', @name if Example.trace
-    @deferred = Q.defer()
     context = new specrunner.Context(this)
     @formatExampleStart(this)
+    
     @before(context).then( =>
       @action(context)
     ).then( =>
       @after(context)
-    ).then( =>
-      Q(@deferred.resolve())
     ).catch( (err) =>
-      Q(@deferred.reject(err))
+      @addResult(new specrunner.Result(
+        specrunner.Result.FAIL,
+        err
+      ))
     ).finally( =>
       unless @results.length > 0
         @addResult(new specrunner.Result(
@@ -43,34 +44,18 @@ class Example
         )
       @formatExampleEnd(this)
     )
-    return @deferred.promise
-  
+    
   before: (context) ->
-    console.log 'before' if Example.trace
-    if @parent?
-      @parent.runAllBeforeEach(context)
-    else
-      Q()
+    console.log 'Example#before' if Example.trace
+    Q(@parent?.runAllBeforeEach(context))
     
   action: (context) ->
-    console.log 'action' if Example.trace
-    if @body?
-      Q(@body.call(context))
-      #.fail(
-      #  @addResult(new specrunner.Result(
-      #    specrunner.Result.FAIL,
-      #    err
-      #  ))
-      #)
-    else
-      Q()
+    console.log 'Example#action' if Example.trace
+    Q(@body?.call(context))
   
   after: (context) ->
-    console.log 'after' if Example.trace
-    if @parent?
-      @parent?.runAllAfterEach(context)
-    else
-      Q()
+    console.log 'Example#after' if Example.trace
+    Q(@parent?.runAllAfterEach(context))
  
   summarizeTo: (summary) ->
     summary.add(result) for result in @results

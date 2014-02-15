@@ -21,7 +21,7 @@ module.exports = ->
     
     @afterEach ->
       @log.push 'five'
-      #console.log 'LOGGED', @log
+      console.log 'LOGGED', @log
       
     @describe 'nested group', ->
       
@@ -32,7 +32,7 @@ module.exports = ->
         @log.push 'four'
       
       @it 'goes once', ->
-        console.log 'three'
+        #console.log 'three'
         @log.push 'three'
         @expect(true, true, 'good')
       

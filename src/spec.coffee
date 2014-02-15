@@ -27,6 +27,6 @@ class Spec
     @current.addAfterEach(fn)
     
   run: () ->
-    @toplevel.run()
+    @toplevel?.run()
     
 module.exports = Spec

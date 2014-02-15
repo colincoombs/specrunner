@@ -1,7 +1,7 @@
 specrunner = require('..')
 require('chai').should()
 
-{Group, Example, Context} = specrunner
+{Group, Example, Context, Main} = specrunner
 
 #Group.trace = true
 #Example.trace = true
@@ -12,10 +12,13 @@ require('chai').should()
 describe 'Main', ->
   describe 'constructor()', ->
     it 'works', ->
-      m = new specrunner.Main()
+      m = new Main()
 
-  describe 'run()', ->
-    it 'works?', ->
-      m = new specrunner.Main()
-      xc = m.run('../test_data/test.coffee')
-      xc.should.equal(1)
+  #describe 'run()', (done) ->
+  #  it 'works?', ->
+  #    m = new Main(format: true)
+  #    m.run('../test_data/test.coffee')
+  #    .then( (xc) ->
+  #      xc.should.equal(1)
+  #      done()
+  #    )

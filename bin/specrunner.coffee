@@ -1,7 +1,7 @@
 options    = require('commander')
 specrunner = require('..')
 
-{Group, Example, Context} = specrunner
+{Main, Group, Example, Context} = specrunner
 
 
 options
@@ -13,11 +13,15 @@ options
 
 options.debug ?= false
 
+Main.trace    = options.debug
 Group.trace   = options.debug
 Example.trace = options.debug
 Context.trace = options.debug
 
 main = new specrunner.Main(options)
-exitCode = main.run(options.args...)
+main.run(options.args...)
+.then( (exitCode) =>
+  console.log 'exitCode', exitCode
+  process.exit(exitCode)
+)
 
-process.exit(exitCode)

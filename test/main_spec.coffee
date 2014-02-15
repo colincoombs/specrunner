@@ -17,4 +17,5 @@ describe 'Main', ->
   describe 'run()', ->
     it 'works?', ->
       m = new specrunner.Main()
-      m.run().should.equal(1)
+      xc = m.run('../test_data/test.coffee')
+      xc.should.equal(1)

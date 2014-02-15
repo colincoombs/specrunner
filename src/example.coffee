@@ -1,7 +1,12 @@
 Q          = require('q')
 specrunner = require('..')
 
-{Result} = specrunner
+{Context, Result} = specrunner
+
+# AARGH
+# why the F*** do I have to write 'specrunner.Result'
+# below, because plain 'Result' is undefined?
+# /AARGH
 
 class Example
 
@@ -10,6 +15,7 @@ class Example
   body:       null
   results:    []
   formatters: []
+    
   @trace: false
   
   constructor: (@parent, @name, @body) ->
@@ -25,9 +31,9 @@ class Example
   # Actually run the example
   # @return {Promise} for completion
   #
-  run: () =>
+  run: () ->
     console.log 'Example#run', @name if Example.trace
-    context = new specrunner.Context(this)
+    context = new Context(this)
     @formatExampleStart(this)
     
     @before(context).then( =>
@@ -35,10 +41,10 @@ class Example
     ).then( =>
       @after(context)
     ).catch( (err) =>
-      @addResult(Result.fail(err))
+      @addResult(specrunner.Result.fail(err))
     ).finally( =>
       unless @results.length > 0
-        @addResult(Result.pend('not yet implemented'))
+        @addResult(specrunner.Result.pend('not yet implemented'))
       @formatExampleEnd(this)
     )
     

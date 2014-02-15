@@ -10,12 +10,12 @@ class Context
     console.log 'Context#constructor' if Context.trace
     
   pending: (description) ->
-    @_example.addResult(Result.pend(description))
+    @_example.addResult(specrunner.Result.pend(description))
 
   expect: (actual, expected=true, errorDescription) ->
     if actual is expected
-      @_example.addResult(Result.pass())
+      @_example.addResult(specrunner.Result.pass())
     else
-      @_example.addResult(Result.fail(errorDescription))
+      @_example.addResult(specrunner.Result.fail(errorDescription))
       
 module.exports = Context

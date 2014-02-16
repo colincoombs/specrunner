@@ -8,7 +8,7 @@ child_process = require('child_process')
 #
 class Observation
 
-  @trace: true
+  @trace: false
   
   # fixed settings for now, decide how to set them later...
   #
@@ -22,7 +22,7 @@ class Observation
       pin: 12
       events: [
         [0, "1'b0"]
-        [120000, "1'b1"]
+        [130000, "1'b1"]
       ]
   # output lines to record
   #
@@ -45,7 +45,7 @@ class Observation
   vlibdir: "/mnt/projects/arduino/verilog"
 
 
-  constructor: ->
+  constructor: (@db) ->
     
   writeWrapper: ->
     @stream.write s for s in [
@@ -112,16 +112,29 @@ class Observation
   run: ->
     @stream = fs.createWriteStream("#{@target}.v")
     @writeWrapper()
+    @stream.end()
     console.log 'Observation#run' if Observation.trace
-    @promiseToRun(
-      '/usr/bin/iverilog'
-      [
-        "#{@target}.v",
-        #"-v",
-        "-y#{@vlibdir}",
-        "-I.",
-        "-o", "#{@target}.vvp"
-      ]
+    @db.get(['_metadata'])
+    .then( (json) =>
+      console.log 'got metadata' if Observation.trace
+      metadata = JSON.parse(json)
+      Q(
+        unless metadata.wires?
+          metadata.wires = (n for n of @responses)
+          metadata.wires.push n for n of @stimuli
+          @db.put(['_metadata'], JSON.stringify(metadata))
+      )
+    ).then( =>
+      @promiseToRun(
+        '/usr/bin/iverilog'
+        [
+          "#{@target}.v",
+          #"-v",
+          "-y#{@vlibdir}",
+          "-I.",
+          "-o", "#{@target}.vvp"
+        ]
+      )
     ).then( =>
       @promiseToRun(
         '/usr/bin/vvp',
@@ -132,10 +145,11 @@ class Observation
         ]
       )
     ).then( =>
-      console.log 'Observation#ran'
-      Q()
+      console.log 'Observation: Vcd#run' if Observation.trace
+      new specrunner.Vcd(@db, "#{@target}.vcd").run()
+    ).then( =>
+      console.log 'Observation: Vcd#ran' if Observation.trace
     )
-    # then import vcd to database
 
   promiseToRun: (prog, args) ->
     console.log 'Observation#promiseToRun', prog, args if Observation.trace

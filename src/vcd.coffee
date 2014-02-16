@@ -18,7 +18,10 @@ class SplitToLines extends stream.Transform
     
 class Vcd extends stream.Writable
 
+  @trace: false
+  
   constructor: (@db, @vcdFileName) ->
+    console.log 'Vcd#constructor', @vcdFileName if Vcd.trace
     super()
     @state = 'start'
     @scopeDepth = 0
@@ -26,6 +29,7 @@ class Vcd extends stream.Writable
     @time = 0
     
   run: ->
+    console.log 'Vcd#run' if Vcd.trace
     q = Q.defer()
     fs.createReadStream(@vcdFileName)
     .pipe(new SplitToLines())
@@ -36,7 +40,6 @@ class Vcd extends stream.Writable
     
   _write: (buf, _, done) ->
     line = buf.toString()
-    #console.log 'line', line
     (
       switch @state
         when 'start'
@@ -58,7 +61,6 @@ class Vcd extends stream.Writable
       when '$scope'
         @scopeDepth += 1
         @state = 'scope'
-        #console.log 'wires', @db.wires
   
   lineInScope: (line) ->
     words = line.split(' ')
@@ -69,24 +71,21 @@ class Vcd extends stream.Writable
         @scopeDepth -= 1
       when '$var'
         [_, _, _, short, long, _] = words
-        #console.log 'consider', @scopeDepth, short, long
         if (@scopeDepth is 1) and (long of @db.wires)
           @map[short] = @db.wires[long]
-          console.log 'map', short, '->', long
+          console.log 'map', short, '->', long if Vcd.trace
       when '$dumpvars'
         @state = 'dumpvars'
-        #console.log 'MAP', @map
 
   lineInDumpvars: (line) ->
     first = line[0]
     rest = line[1..]
-    #console.log 'dv', first, rest
     switch first
       when '#'
         result = Q(@time = parseInt(rest))
       else
         if rest of @map
-          #console.log @time, rest, first
+          console.log @time, rest, first if Vcd.trace
           result = @map[rest].put(@time, first)
         else
           result = Q()

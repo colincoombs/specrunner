@@ -7,3 +7,8 @@ node_modules/
 /doc/plantuml/classes.png
 /doc/plantuml/run.png
 /test_data/responder.vcd
+*.elf
+*.v
+*.vvp
+*.vcd
+

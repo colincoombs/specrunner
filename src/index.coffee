@@ -14,3 +14,4 @@ module.exports.Wire      = require('./wire')
 
 module.exports.level     = require('./fakelevel')
 module.exports.StreamPromise = require('./stream_promise')
+module.exports.Observation = require('./observation')

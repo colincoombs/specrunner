@@ -61,7 +61,7 @@ class Group extends specrunner.Example
     .then( =>
       console.log "Group#parent resolved", @name if Group.trace
       @promiseAllActions(context, @beforeEach)
-    ).catch( (err) =>
+    ).catch( (err) ->
       console.log 'AARGH', err if Group.trace
       throw err
     )

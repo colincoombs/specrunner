@@ -2,54 +2,24 @@ Q          = require('q')
 stream     = require('stream')
 specrunner = require('..')
 
-class Wire extends stream.Transform
+class GnuplotFormatter extends stream.Transform
 
-  constructor: (@db, @name) ->
-    #console.log 'Wire#constructor', @db, @name
-    super(objectMode: true)
-    @posedge = new specrunner.Event(this, '1')
-    @negedge = new specrunner.Event(this, '0')
-    @t = 0
-    @v = 0
+  constructor: (@db, @wire, @options = {}) ->
+    @options.objectMode = true
+    super(@options)
   
-  put: (time, value) ->
-    #console.log 'Wire#put', @name, time, value
-    @db.put([@name, @db.timeToStamp(time)], value)
-    
-  stream: (start, end) ->
-    @db.stream(
-      start: @startPrefix(start)
-      end:   @endPrefix(end)
-    )
-  
-  promiseToPipe: (outputStream, @options = {}, streamOptions) =>
-    #console.log 'Wire#promiseToPipe', outputStream, options, streamOptions
-    @options.offset ?= 0
-    @options.height ?= 5
-    @options.timeFactor ?= 1
-    @options.tmax ?= 100
-    @q = Q.defer()
-    @stream().then( (s) =>
-      s
-      .pipe(this)
-      .pipe(outputStream, streamOptions)
-    ).fail((err) =>
-      @q.reject(err)
-    )
-    return @q.promise
-
   _transform: (ev,_,done) =>
     stamp = ev.key.split('~').pop()
     t = @db.stampToTime(stamp) * @options.timeFactor
     if t isnt @t
       @_drawToTime(t)
-    @v = @_plotValue(ev.value)
+    @v = @wire._plotValue(ev.value)
     done()
 
   _flush: (done) =>
     @_drawToTime(@options.tmax)
+    @emit 'resolve'
     @push "e\n"
-    @q.resolve()
     done()
 
   _drawToTime: (t) ->
@@ -59,6 +29,47 @@ class Wire extends stream.Transform
     @t = t
     @push "#{@t} #{@v}\n"
     
+class Wire
+
+  @trace: false
+  
+  constructor: (@db, @name) ->
+    console.log 'Wire#constructor', @db, @name if Wire.trace
+    @posedge = new specrunner.Event(this, '1')
+    @negedge = new specrunner.Event(this, '0')
+    @t = 0
+    @v = 0
+  
+  put: (time, value) ->
+    console.log 'Wire#put', @name, time, value if Wire.trace
+    @db.put([@name, @db.timeToStamp(time)], value)
+    
+  stream: (start, end) ->
+    @db.stream(
+      start: @startPrefix(start)
+      end:   @endPrefix(end)
+    )
+  
+  promiseToPipe: (outputStream, @options = {}, streamOptions) =>
+    console.log(
+      'Wire#promiseToPipe', outputStream, options, streamOptions
+    ) if Wire.trace
+    @options.offset ?= 0
+    @options.height ?= 5
+    @options.timeFactor ?= 1
+    @options.tmax ?= 100
+    @q = Q.defer()
+    @stream().then( (s) =>
+      f = new GnuplotFormatter(@db, this, @options)
+      f.on 'resolve', => @q.resolve()
+      s
+      .pipe(f)
+      .pipe(outputStream, streamOptions)
+    ).fail((err) =>
+      @q.reject(err)
+    )
+    return @q.promise
+
   startPrefix: (start) ->
     result = [@name]
     result.push(if start? then @db.timeToStamp(start) else '')

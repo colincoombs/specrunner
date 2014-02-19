@@ -21,7 +21,7 @@ class Vcd extends stream.Writable
   @trace: false
   
   constructor: (@db, @vcdFileName) ->
-    console.log 'Vcd#constructor', @vcdFileName if Vcd.trace
+    console.log 'Vcd#constructor', @db.prefix, @vcdFileName if Vcd.trace
     super()
     @state = 'start'
     @scopeDepth = 0
@@ -29,7 +29,7 @@ class Vcd extends stream.Writable
     @time = 0
     
   run: ->
-    console.log 'Vcd#run' if Vcd.trace
+    console.log 'Vcd#run', (n for n of @db.wires) if Vcd.trace
     q = Q.defer()
     fs.createReadStream(@vcdFileName)
     .pipe(new SplitToLines())

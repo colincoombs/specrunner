@@ -41,7 +41,7 @@ class Observation
   timescale:
     ns: 1
   timeFactor: 1/1000
-  runtime: 180000
+  runtime: 2400000
   vlibdir: "/mnt/projects/arduino/verilog"
 
 
@@ -63,6 +63,7 @@ class Observation
     @stream.write s for s in [
       "  initial begin\n"
       "    $dumpfile(\"#{@target}.vcd\");\n"
+      #"    $avr_trace(\"#{@target}.trc\");\n"
       "    $dumpvars(0,test);\n"
       "  end\n"
     ]
@@ -118,12 +119,14 @@ class Observation
     .then( (json) =>
       console.log 'got metadata' if Observation.trace
       metadata = JSON.parse(json)
-      Q(
-        unless metadata.wires?
-          metadata.wires = (n for n of @responses)
-          metadata.wires.push n for n of @stimuli
-          @db.put(['_metadata'], JSON.stringify(metadata))
-      )
+      
+      if metadata.wires?
+        Q()
+      else
+        metadata.wires = (n for n of @responses)
+        metadata.wires.push n for n of @stimuli
+        @db.put(['_metadata'], JSON.stringify(metadata))
+        .then( => @db.addWires(metadata.wires))
     ).then( =>
       @promiseToRun(
         '/usr/bin/iverilog'

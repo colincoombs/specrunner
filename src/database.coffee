@@ -104,9 +104,12 @@ class Database
         console.log(@prefix, 'default metadata', @metadata) if Database.trace
       @put(['_metadata'], JSON.stringify(@metadata))
     .then =>
-      wireNames = @metadata.wires ? []
-      @wires[n] = new specrunner.Wire(this, n) for n in wireNames
+      @addWires(@metadata.wires ? [])
       Q(this)
+    
+  addWires: (wireNames) ->
+    console.log('Database#addWires', wireNames) if Database.trace
+    @wires[n] = new specrunner.Wire(this, n) for n in wireNames
     
   fullKey: (key) ->
     fullKey = []

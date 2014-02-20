@@ -34,7 +34,7 @@ class Group extends specrunner.Example
     console.log 'Group#addAfterEach', @name if Group.trace
     @afterEach.push(action)
   
-  run: () ->
+  run: (@db) ->
     console.log 'Group#run', @name, @examples.length if Group.trace
     @formatGroupStart(this)
     @promiseRemainingExamples(@examples)
@@ -49,7 +49,7 @@ class Group extends specrunner.Example
     ) if Group.trace
     if examples.length > 0
       [first, theRest...] = examples
-      first.run()
+      first.run(@db)
       .then =>
         @promiseRemainingExamples(theRest)
     else

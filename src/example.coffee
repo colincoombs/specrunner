@@ -1,11 +1,8 @@
 Q          = require('q')
 specrunner = require('..')
 
-{Context, Result} = specrunner
-
 # AARGH
 # why the F*** do I have to write 'specrunner.Result'
-# below, because plain 'Result' is undefined?
 # /AARGH
 
 class Example
@@ -31,9 +28,9 @@ class Example
   # Actually run the example
   # @return {Promise} for completion
   #
-  run: () ->
+  run: (@db) ->
     console.log 'Example#run', @name if Example.trace
-    context = new Context(this)
+    context = new specrunner.Observation(this, @db)
     @formatExampleStart(this)
     
     @before(context).then( =>

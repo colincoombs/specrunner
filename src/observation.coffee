@@ -6,7 +6,7 @@ child_process = require('child_process')
 
 # actually run a target program
 #
-class Observation
+class Observation extends specrunner.Context
 
   @trace: false
   
@@ -26,15 +26,6 @@ class Observation
       ]
   # output lines to record
   #
-  responses:
-    active:
-      pin: 8
-    agent:
-      pin: 9
-    isr:
-      pin: 10
-    led:
-      pin: 11
 
   # odds and sods
   #
@@ -45,7 +36,8 @@ class Observation
   vlibdir: "/mnt/projects/arduino/verilog"
 
 
-  constructor: (@db) ->
+  constructor: (example, @db) ->
+    super(example)
     
   writeWrapper: ->
     @stream.write s for s in [

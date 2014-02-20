@@ -1,8 +1,13 @@
 specrunner = require('../specrunner')
 
-o = new specrunner.Observation()
+location = './db.sqlite'
 
-o.run()
+#specrunner.Observation.trace = true
+#specrunner.Vcd.trace = true
+
+specrunner.Database.open(location, prefix: ['responder'])
+.then( (db) -> new specrunner.Observation(db).run() )
+.then( -> process.exit(0) )
 .done()
 
 

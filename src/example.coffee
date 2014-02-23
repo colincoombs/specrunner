@@ -34,8 +34,10 @@ class Example
     @formatExampleStart(this)
     
     @before(context).then( =>
+      console.log 'DONE BEFORE'
       @action(context)
     ).then( =>
+      console.log 'DONE ACTION'
       @after(context)
     ).catch( (err) =>
       @addResult(specrunner.Result.fail(err))
@@ -51,7 +53,9 @@ class Example
     
   action: (context) ->
     console.log 'Example#action' if Example.trace
-    Q(@body?.call(context))
+    rc = @body?.call(context)
+    console.log 'BODY RETURNS', rc
+    Q(rc)
   
   after: (context) ->
     console.log 'Example#after' if Example.trace

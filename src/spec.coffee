@@ -38,25 +38,25 @@ class Spec
     
   run: (@db) ->
     console.log 'Spec#run' if Spec.trace
-    @toplevel?.run()
+    @toplevel?.run(@db)
   
-  hardware: (name, fn) ->
+  hardware: (options) ->
     console.log 'Spec#hardware' if Spec.trace
-    @current = new specrunner.Group(@current, name, fn)
-    fn.apply(this)
-    @current = @current.parent
+    @current.addBeforeEach(
+      -> @hardware(options)
+    )
     
-  firmware: (name, fn) ->
+  firmware: (options) ->
     console.log 'Spec#firmware' if Spec.trace
-    @current = new specrunner.Group(@current, name, fn)
-    fn.apply(this)
-    @current = @current.parent
+    @current.addBeforeEach(
+      -> @firmware(options)
+    )
     
-  stimuli: (name, fn) ->
+  stimuli: (name, options) ->
     console.log 'Spec#stimuli' if Spec.trace
-    @current = new specrunner.Group(@current, name, fn)
-    fn.apply(this)
-    @current = @current.parent
+    new specrunner.Example(@current, name,
+      -> @stimuli(options)
+    )
     
   check: (fn) ->
     console.log 'Spec#check' if Spec.trace

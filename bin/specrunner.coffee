@@ -3,12 +3,12 @@
 options    = require('commander')
 specrunner = require('..')
 
-{Main, Group, Example, Context, Database, Spec} = specrunner
+{Main, Group, Example, Context, Observation, Database, Spec} = specrunner
 
 
 options
   .option('-p, --permissive', 'accept specifications with pending steps')
-  .option('-d, --debug', 'enable loads ot tracingg and stuff')
+  .option('-d, --debug', 'enable loads ot tracing and stuff')
   .option('-f, --format', 'enable result formatter')
   # --grep
   # --invert
@@ -23,8 +23,10 @@ Spec.trace    = options.debug
 Group.trace   = options.debug
 Example.trace = options.debug
 Context.trace = options.debug
+Database.trace = options.debug
+Observation.trace = options.debug
 
-Database.open()
+Database.open('./db.sqlite', prefix: ['responder'], trace: options.debug)
 .then (db) ->
   main = new specrunner.Main(db, options)
   main.run(options.args...)

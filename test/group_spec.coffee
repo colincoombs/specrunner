@@ -1,7 +1,7 @@
 Q          = require('q')
 specrunner = require('..')
 
-{Group, Example} = specrunner
+{Group, Example, Database, level} = specrunner
 
 chai = require('chai')
 chai.should()
@@ -34,6 +34,14 @@ describe 'Group', ->
         g.fullname().should.deep.equal(['P', 'G'])
       
   describe 'run()', ->
+
+    beforeEach ->
+     Database._level = level(':memory:')
+     #Database._level.db.on('error', console.error)
+     
+    afterEach ->
+      Database.shutdown()
+     
     it 'returns a promise', ->
       g = new Group(null, 'G2')
       rc = g.run()

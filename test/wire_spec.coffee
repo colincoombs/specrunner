@@ -67,27 +67,27 @@ describe 'Wire', ->
       .catch (e) ->
         done(e)
     
-  describe 'promiseToPipe', ->
-    it 'streams everything', (done) ->
-      a = new specrunner.Wire(@db, 'A')
-      a.put(0, 'x')
-      .then ->
-        a.put(1, '0')
-      .then ->
-        a.put(5, '1')
-      .then ->
-        a.promiseToPipe(process.stdout)
-      #.then (s) =>
-      #  StreamPromise.new(s, (ev) ->
-      #    @resolution ?= []
-      #    @resolution.push ev
-      #  )
-      .then (result) ->
-        #expect(result).to.deep.equal([
-        #  { key:'A~00000000', value:'x'},
-        #  { key:'A~00000001', value:'0'},
-        #  { key:'A~00000005', value:'1'},
-        #])
-        done()
-      .catch (e) ->
-        done(e)
+  #describe 'promiseToPipe', ->
+  #  it 'streams everything', (done) ->
+  #    a = new specrunner.Wire(@db, 'A')
+  #    a.put(0, 'x')
+  #    .then ->
+  #      a.put(1, '0')
+  #    .then ->
+  #      a.put(5, '1')
+  #    .then ->
+  #      a.promiseToPipe(process.stdout)
+  #    .then (s) =>
+  #      StreamPromise.new(s, (ev) ->
+  #        @resolution ?= []
+  #        @resolution.push ev
+  #      )
+  #    .then (result) ->
+  #      expect(result).to.deep.equal([
+  #        { key:'A~00000000', value:'x'},
+  #        { key:'A~00000001', value:'0'},
+  #        { key:'A~00000005', value:'1'},
+  #      ])
+  #      done()
+  #    .catch (e) ->
+  #      done(e)

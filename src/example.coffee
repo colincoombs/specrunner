@@ -50,14 +50,19 @@ class Example
       @formatExampleStart(this)
       @before(context)
     ).then( =>
+      #console.log 'done before'
       @action(context)
     ).then( =>
+      #console.log 'done action'
       @after(context)
     ).then( =>
+      #console.log 'done after'
       @db.recordLastTime()
     ).catch( (err) =>
+      #console.log 'catch', err.stack
       @addResult(specrunner.Result.fail(err.stack))
     ).finally( =>
+      #console.log 'finally'
       unless @results.length > 0
         @addResult(specrunner.Result.pend('not yet implemented'))
       @formatExampleEnd(this)
@@ -69,8 +74,7 @@ class Example
     
   action: (context) ->
     console.log 'Example#action' if Example.trace
-    rc = @body?.call(context)
-    Q(rc)
+    Q(@body?.call(context))
   
   after: (context) ->
     console.log 'Example#after' if Example.trace

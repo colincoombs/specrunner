@@ -2,7 +2,7 @@ specrunner = require('..')
 Q          = require('q')
 require('chai').should()
 
-{Group, Example} = specrunner
+{Group, Example, Database, level} = specrunner
 
 # get some spying tools -- sinon?
 
@@ -35,10 +35,17 @@ describe 'Example', ->
         e.fullname().should.deep.equal(['P', 'G'])
 
   describe 'run', ->
-    
+
+    beforeEach ->
+     Database._level = level(':memory:')
+     #Database._level.db.on('error', console.error)
+     
+    afterEach ->
+      Database.shutdown()
+     
     describe 'without a body', (done) ->
       
-      it 'returns a promise which will be resolved', ->
+      it 'returns a promise which will be resolved', (done) ->
         # arrange
         ex = new specrunner.Example()
         # act
@@ -145,7 +152,7 @@ describe 'Example', ->
           done()
         .catch (err) =>
           done(err)
-
+    
       it 'succeeds', (done) ->
         log = []
         g2 = new Group(null, 'G')
@@ -161,7 +168,7 @@ describe 'Example', ->
           done(err)
         
     describe 'with an after action that fails', ->
-
+    
       it 'succeeds', (done) ->
         log = []
         g2 = new Group(null, 'G')

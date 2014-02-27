@@ -42,6 +42,7 @@ class Wire
   
   put: (time, value) ->
     console.log 'Wire#put', @name, time, value if Wire.trace
+    @db.lastTime = time
     @db.put([@name, @db.timeToStamp(time)], value)
     
   stream: (start, end) ->

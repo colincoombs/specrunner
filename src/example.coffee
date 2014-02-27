@@ -45,6 +45,7 @@ class Example
     context = null
     specrunner.Database.open(null, prefix: @fullname())
     .then( (db) =>
+      @db = db
       context = new specrunner.Observation(this, db)
       @formatExampleStart(this)
       @before(context)
@@ -52,6 +53,8 @@ class Example
       @action(context)
     ).then( =>
       @after(context)
+    ).then( =>
+      @db.recordLastTime()
     ).catch( (err) =>
       @addResult(specrunner.Result.fail(err.stack))
     ).finally( =>

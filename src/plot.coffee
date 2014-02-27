@@ -19,7 +19,7 @@ class Plot
     @options.yStride    ?= 10
     @options.height     ?= @options.yStride / 2
     @options.timeFactor ?= 1
-    @options.tmax       ?= 180000
+    @options.tmax       ?= @db.metadata.lastTime ? 180000
     @wireNames = @options.wireNames ? (n for n of @db.wires)
     @_computeOffsets()
     

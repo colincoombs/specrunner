@@ -78,6 +78,8 @@ class Database
   prefix: []
     
   child: {}
+  
+  tMargin: 500
     
   constructor: (@parent, options = {}) ->
     console.log('Database#constructor', options) if Database.trace
@@ -106,7 +108,14 @@ class Database
     .then =>
       @addWires(@metadata.wires ? [])
       Q(this)
-    
+
+  recordLastTime: () ->
+    if @lastTime?
+      @metadata.lastTime = @lastTime+@tMargin
+      @put(['_metadata'], JSON.stringify(@metadata))
+    else
+      Q()
+
   addWires: (wireNames) ->
     console.log('Database#addWires', wireNames) if Database.trace
     @wires[n] = new specrunner.Wire(this, n) for n in wireNames

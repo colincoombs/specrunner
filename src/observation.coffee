@@ -126,12 +126,13 @@ class SystemSwH extends FileWriter
 class SystemC extends FileWriter
 
   constructor: (@agents, fileName) ->
-    console.log 'SystemC#constructor', @agents
+    #console.log 'SystemC#constructor', @agents
     super(fileName)
     
   body: ->
     @l(
-      '#include <system.h>'
+      '#include <system_hw.h>'
+      '#include <system_sw.h>'
       '#include <ak.h>'
       '#include <avr/io.h>'
       ''
@@ -201,7 +202,7 @@ class SystemV extends FileWriter
     @l "  assign #{n} = pins[#{v.pin}];" for n, v of @responses
     @l(
       '  initial begin'
-      "    $dumpfile(\"#{@target}.vcd\")"
+      "    $dumpfile(\"#{@target}.vcd\");"
       '    $dumpvars(0,test);'
       '  end'
     )
@@ -252,7 +253,7 @@ class Observation extends specrunner.Context
     @rundata.stimuli = {}
     @rundata.responses = {}
     # get the pins used in this configuration
-    @rundata.stimuli[n] = v for n, v of options.stimuli
+    @rundata.stimuli[n]   = v for n, v of options.stimuli
     @rundata.responses[n] = v for n, v of options.responses
     #console.log 'PINS', @pins
     # annotate pins with port/bit details
@@ -282,7 +283,7 @@ class Observation extends specrunner.Context
       @rundata.stimuli[n].events = v
     @rundata.runtime = options.runtime
     new SystemV(
-      'responder',
+      'system',
       @rundata.stimuli,
       @rundata.responses,
       @rundata.runtime,
@@ -329,18 +330,7 @@ class Observation extends specrunner.Context
       console.log 'Observation: Vcd#ran' if Observation.trace
     )
 
-  # fixed settings for now, decide how to set them later...
-  #
-  target: 'responder'
-  mode: 'simulated'    # the only choice just now
-
-  # the test inputs
-  #
-  # output lines to record
-  #
-
-  # odds and sods
-  #
+  target: 'system'
   timescale:
     ns: 1
   timeFactor: 1/1000

@@ -8,7 +8,7 @@ class Spec
   
   current: null
   
-  constructor: (@filename, @db) ->
+  constructor: (@filename) ->
     console.log 'Spec#constructor', path.resolve(@filename) if Spec.trace
     try
       @toplevel = new specrunner.Group(null, null)
@@ -36,9 +36,9 @@ class Spec
     console.log 'Spec#afterEach' if Spec.trace
     @current.addAfterEach(fn)
     
-  run: (@db) ->
+  run: () ->
     console.log 'Spec#run' if Spec.trace
-    @toplevel?.run(@db)
+    @toplevel?.run()
   
   hardware: (options) ->
     console.log 'Spec#hardware' if Spec.trace

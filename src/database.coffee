@@ -39,7 +39,7 @@ class Database
       console.log 'found level' if Database.trace
       Q(@_level)
     else
-      console.log 'create level', specrunner.level if Database.trace
+      console.log 'create level' if Database.trace
       Q.fcall(specrunner.level, location, options)
       .then (db) =>
         console.log 'created level' if Database.trace

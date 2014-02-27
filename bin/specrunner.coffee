@@ -26,10 +26,8 @@ Context.trace = options.debug
 Database.trace = options.debug
 Observation.trace = options.debug
 
-Database.open('./db.sqlite', prefix: ['responder'], trace: options.debug)
-.then (db) ->
-  main = new specrunner.Main(db, options)
-  main.run(options.args...)
+main = new specrunner.Main(options)
+main.run(options.args...)
 .then( (exitCode) =>
   console.log 'exitCode', exitCode if options.debug
   process.exit(exitCode)

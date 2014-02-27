@@ -21,6 +21,17 @@ class Example
     if @parent?
       @parent.add(this)
     
+  fullname: ->
+    unless @name?
+      return []
+    result = []
+    unless @parent
+      return [@name]
+    else
+      result = (n for n in @parent.fullname())
+      result.push @name if @name
+      return result
+    
   addResult: (result) ->
     @results.push(result)
     @formatResult(result)
@@ -28,19 +39,21 @@ class Example
   # Actually run the example
   # @return {Promise} for completion
   #
-  run: (@db) ->
-    console.log 'Example#run', @name if Example.trace
-    context = new specrunner.Observation(this, @db)
-    @formatExampleStart(this)
-    
-    @before(context).then( =>
-      console.log 'DONE BEFORE'
+  run: ->
+    console.log 'Example#run', @fullname() if Example.trace
+    # TODO construct prefix from names, get local db instance
+    context = null
+    specrunner.Database.open(null, prefix: @fullname())
+    .then( (db) =>
+      context = new specrunner.Observation(this, db)
+      @formatExampleStart(this)
+      @before(context)
+    ).then( =>
       @action(context)
     ).then( =>
-      console.log 'DONE ACTION'
       @after(context)
     ).catch( (err) =>
-      @addResult(specrunner.Result.fail(err))
+      @addResult(specrunner.Result.fail(err.stack))
     ).finally( =>
       unless @results.length > 0
         @addResult(specrunner.Result.pend('not yet implemented'))
@@ -54,7 +67,6 @@ class Example
   action: (context) ->
     console.log 'Example#action' if Example.trace
     rc = @body?.call(context)
-    console.log 'BODY RETURNS', rc
     Q(rc)
   
   after: (context) ->

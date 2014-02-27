@@ -12,6 +12,26 @@ describe 'Group', ->
   describe 'constructor(parent, name)', ->
     it 'works', ->
       ( -> g = new Group(null, 'G1')).should.not.throw(Error)
+
+  describe 'fullname', ->
+    describe 'without a name', ->
+      it 'is an empty array', ->
+        g = new Group(null, null)
+        g.fullname().should.deep.equal([])
+    describe 'with a name and no parent', ->
+      it 'is an array of the name', ->
+        g = new Group(null, 'G')
+        g.fullname().should.deep.equal(['G'])
+    describe 'with a name and a null-named parent', ->
+      it 'is an array of the name', ->
+        p = new Group(null, null)
+        g = new Group(p, 'G')
+        g.fullname().should.deep.equal(['G'])
+    describe 'with a name and a named parent', ->
+      it 'is an array of the two names', ->
+        p = new Group(null, 'P')
+        g = new Group(p, 'G')
+        g.fullname().should.deep.equal(['P', 'G'])
       
   describe 'run()', ->
     it 'returns a promise', ->

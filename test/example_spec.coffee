@@ -14,6 +14,26 @@ describe 'Example', ->
 
     # with a parent, it gets added
 
+  describe 'fullname', ->
+    describe 'without a name', ->
+      it 'is an empty array', ->
+        e = new Example(null, null)
+        e.fullname().should.deep.equal([])
+    describe 'with a name and no parent', ->
+      it 'is an array of the name', ->
+        e = new Example(null, 'G')
+        e.fullname().should.deep.equal(['G'])
+    describe 'with a name and a null-named parent', ->
+      it 'is an array of the name', ->
+        p = new Group(null, null)
+        e = new Example(p, 'G')
+        e.fullname().should.deep.equal(['G'])
+    describe 'with a name and a named parent', ->
+      it 'is an array of the two names', ->
+        p = new Group(null, 'P')
+        e = new Example(p, 'G')
+        e.fullname().should.deep.equal(['P', 'G'])
+
   describe 'run', ->
     
     describe 'without a body', (done) ->

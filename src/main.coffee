@@ -5,7 +5,7 @@ class Main
 
   @trace: false
   
-  constructor: (@db, @options = {}) ->
+  constructor: (@options = {}) ->
     console.log 'Main#constructor' if Main.trace
     @formatter = new specrunner.Formatter() if @options.format?
     @summary = new specrunner.Summary()
@@ -32,7 +32,7 @@ class Main
     console.log 'Main#runOneFile', filename if Main.trace
     spec = new specrunner.Spec(filename)
     spec.toplevel.addFormatter(@formatter) if @formatter
-    spec.run(@db)
+    spec.run()
     .then =>
       Q(spec.toplevel.summarizeTo(@summary))
   
